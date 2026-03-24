@@ -64,14 +64,15 @@ jobs:
 
       - name: Set up Nonguix Substitutes
         run: |
-          # This is necessary to authorize the substitute server
-          wget https://substitutes.nonguix.org/signing-key.pub
-          mv signing-key.pub nonguix-signing-key.pub
+          # Authorize the nonguix substitute server signing key
+          cat > nonguix-signing-key.pub <<'PUBKEY'
+          (public-key (ecc (curve Ed25519) (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))
+          PUBKEY
           sudo /var/guix/profiles/per-user/root/current-guix/bin/guix archive --authorize < nonguix-signing-key.pub
 
       - name: Set daemon level Substitutes
         run: |
-          SUBSTITUTE_URLS="https://ci.guix.gnu.org https://bordeaux.guix.gnu.org https://substitutes.nonguix.org"
+          SUBSTITUTE_URLS="https://ci.guix.gnu.org https://bordeaux.guix.gnu.org https://nonguix-proxy.ditigal.xyz"
 
           # The v1.6 service file doesn't include --substitute-urls, so we
           # append it to the ExecStart line rather than replacing an existing value.
