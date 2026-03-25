@@ -95,7 +95,10 @@ jobs:
           cp $image ./guix-installer-$RELEASE_TAG.iso
 
       - name: Compress ISO
-        run: gzip -9 guix-installer-$RELEASE_TAG.iso
+        run: zstd -19 guix-installer-$RELEASE_TAG.iso
+
+      - name: Check ISO size
+        run: ls -lh guix-installer-*.iso.zst && stat --printf="%s" guix-installer-*.iso.zst
 
       - uses: actions/cache/save@v4
         if: always()
@@ -106,10 +109,10 @@ jobs:
       - name: Prepare Release Notes
         run: |
           cat > release-notes.md <<'NOTES'
-          This installer image is compressed with gzip. Decompress it before writing to USB:
+          This installer image is compressed with zstd. Decompress it before writing to USB:
 
           ```
-          gunzip guix-installer-*.iso.gz
+          zstd -d guix-installer-*.iso.zst
           ```
 
           This installer image was prepared with the following channel configuration:
@@ -126,7 +129,7 @@ jobs:
           tag_name: v${{ env.RELEASE_TAG }}
           body_path: release-notes.md
           fail_on_unmatched_files: true
-          files: guix-installer-${{ env.RELEASE_TAG }}.iso.gz
+          files: guix-installer-${{ env.RELEASE_TAG }}.iso.zst
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: SystemCrafters/guix-installer
