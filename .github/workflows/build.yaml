@@ -94,6 +94,9 @@ jobs:
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
           cp $image ./guix-installer-$RELEASE_TAG.iso
 
+      - name: Compress ISO
+        run: gzip -9 guix-installer-$RELEASE_TAG.iso
+
       - uses: actions/cache/save@v4
         if: always()
         with:
@@ -102,7 +105,17 @@ jobs:
 
       - name: Prepare Release Notes
         run: |
-          echo $'This installer image was prepared with the following channel configuration:\r\n\r\n```\r\n' > release-notes.md
+          cat > release-notes.md <<'NOTES'
+          This installer image is compressed with gzip. Decompress it before writing to USB:
+
+          ```
+          gunzip guix-installer-*.iso.gz
+          ```
+
+          This installer image was prepared with the following channel configuration:
+
+          NOTES
+          echo $'```\r\n' >> release-notes.md
           cat ./guix/channels.scm >> release-notes.md
           echo $'\r\n```' >> release-notes.md
 
@@ -113,7 +126,7 @@ jobs:
           tag_name: v${{ env.RELEASE_TAG }}
           body_path: release-notes.md
           fail_on_unmatched_files: true
-          files: guix-installer-${{ env.RELEASE_TAG }}.iso
+          files: guix-installer-${{ env.RELEASE_TAG }}.iso.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: SystemCrafters/guix-installer
